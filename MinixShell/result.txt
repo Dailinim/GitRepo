@@ -1,0 +1,16 @@
+total 376
+drwxr-xr-x  15 Blankchul  staff     510  3 13 11:14 .
+drwx------+ 47 Blankchul  staff    1598  3 13 00:19 ..
+-rw-r--r--@  1 Blankchul  staff    6148  3 13 11:02 .DS_Store
+drwxr-xr-x   5 Blankchul  staff     170  3  9 16:21 .vscode
+drwxr-xr-x   3 Blankchul  staff     102  3  9 16:22 hello.dSYM
+-rwxr-xr-x   1 Blankchul  staff   15076  3 13 11:14 main
+-rw-r--r--   1 Blankchul  staff     690  3 13 11:02 main.c
+drwxr-xr-x   3 Blankchul  staff     102  3 11 23:49 main.dSYM
+-rw-r--r--   1 Blankchul  staff  133817  3  8 16:17 main.exe
+-rw-r--r--   1 Blankchul  staff    6792  3 13 11:14 mshell.c
+-rw-r--r--   1 Blankchul  staff    1193  3 13 11:07 mshell.h
+-rw-r--r--   1 Blankchul  staff       0  3 13 11:13 result.txt
+-rwxr-xr-x   1 Blankchul  staff    8916  3 12 10:46 test
+-rw-r--r--   1 Blankchul  staff     340  3 12 10:31 test.c
+drwxr-xr-x   3 Blankchul  staff     102  3 13 10:55 well
