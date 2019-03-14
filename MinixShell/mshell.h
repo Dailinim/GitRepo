@@ -43,7 +43,7 @@ void command(char* cmd, struct command_type cmdline[]);
 
 int check(char x);
 
-void parse_cmd(char* cmd, struct command_type cmdline[]);
+void parse_cmd(char* cmd, char* argv[]);
 
 int builtin_cmd(struct command_type cmdline[]);
 

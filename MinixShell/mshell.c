@@ -85,7 +85,7 @@ int check(char x)
 }
 
 //处理没有管道的情况，保存空格分割的命令和字符串
-void parse_cmd(char* cmd, struct command_type* cmdline)
+void parse_cmd(char* cmd, char* argv[])
 {
     //char *cmd1 = malloc(sizeof(char)*(strlen(cmd)+1));//避免strtok函数破坏愿字符
     const char *d = " ";
@@ -137,19 +137,14 @@ int builtin_cmd(struct command_type cmdline[])
 }
 
 //专门处理管道
-void pipe_cmd(char* cmd, struct command_type* cmdline)
+void pipe_cmd(char* cmd)
 {
-    int fd[2];
-    int i=0;
-    int pipe_num = 0;//所需管道数量
+    int pipe_num=0;
     int fds[PIPENUM][2];
-    pid_t pid;
-    int pipe_cmd_num;//命令数量
-    char* pipe_cmd[CMDSIZE];//保存每一条命令
-    char* p;
+    char* pipe_cmd[CMDNUM];
     
     //计算需要多少管道
-    for(i=0; i<cmdline->argc; i++)
+    for(int i=0; i<cmdline->argc; i++)
     {
         if(cmdline->argv[i] == '|')
         {
@@ -159,43 +154,35 @@ void pipe_cmd(char* cmd, struct command_type* cmdline)
     } 
 
     //创建管道
-    for(i=0; i<pipe_num; i++)
+    for(int i=0; i<pipe_num; i++)
         pipe(&fds[i][0]);
 
     //按照|将原始命令分割开， pipe_argv[]的一项为一个命令
-    p= strtok(cmd, "|");
+    int i=0;
+    char* p= strtok(cmd, "|");
     while(p)
     {
         pipe_cmd[i++] = p;
         p = strtok(NULL, "|");
     }
     pipe_cmd[i]=0;
-    pipe_cmd_num = i;
 
-    //
-    int pipe_count = 1;
-    int pro_count = 1;
-
+    //执行命令
+    pid_t pid;
+    int pipe_count = 0;//管道计数
+    int pro_count = 0;//进程计数
     if((pid = fork())<0)
         perror("fork error!");
-
-    if(pid == 0)//子进程
+    if(pid==0)//子进程
     {
         close(STD_OUTPUT);
-        dup2(fd[pipe_count-1][1], STD_OUTPUT);
+        dup2(fds[pipe_count][1], STD_OUTPUT);
         
-        char* pipe_argv[CMDSIZE];
-        int 
-        p = strtok(pipe_cmd[pro_count-1], " ");
-        while(p)
-        {
+        //按照空格分割命令
 
-        }
     }
-    else//父进程
-    {
-        pipe_loop()
-    }
+}
+
         
 
 void pipe_loop(int pipe_count, int pro_count, char* pipe_cmd[])
