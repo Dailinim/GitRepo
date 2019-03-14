@@ -34,7 +34,7 @@ void command(char* cmd, struct command_type cmdline[])
     //先判断是否含有管道，所有含管道的命令都由函数pipe()执行
     if(check('|'))
     {
-        pipe_cmd(cmd, cmdline);//????是否有必要标记每一种cmd的info
+        pipe_cmd(cmd);//????是否有必要标记每一种cmd的info
         return;
     }
 
@@ -85,7 +85,7 @@ int check(char x)
 }
 
 //处理没有管道的情况，保存空格分割的命令和字符串
-void parse_cmd(char* cmd, char* argv[])
+void parse_cmd(char* cmd, struct command_type* cmdline)
 {
     //char *cmd1 = malloc(sizeof(char)*(strlen(cmd)+1));//避免strtok函数破坏愿字符
     const char *d = " ";
@@ -139,6 +139,7 @@ int builtin_cmd(struct command_type cmdline[])
 //专门处理管道
 void pipe_cmd(char* cmd)
 {
+    /*
     int pipe_num=0;
     int fds[PIPENUM][2];
     char* pipe_cmd[CMDNUM];
@@ -180,11 +181,11 @@ void pipe_cmd(char* cmd)
         
         //按照空格分割命令
 
-    }
+    }*/
 }
 
         
-
+/*
 void pipe_loop(int pipe_count, int pro_count, char* pipe_cmd[])
 {
     while(pro_count>1)
@@ -225,10 +226,9 @@ void pipe_loop(int pipe_count, int pro_count, char* pipe_cmd[])
         
     }
     
-}
+}*/
 
-    
-}
+
 void execute_command(struct command_type* cmdline)
 {
     pid_t pid;

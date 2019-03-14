@@ -43,11 +43,11 @@ void command(char* cmd, struct command_type cmdline[]);
 
 int check(char x);
 
-void parse_cmd(char* cmd, char* argv[]);
+void parse_cmd(char* cmd, struct command_type* cmdline);
 
 int builtin_cmd(struct command_type cmdline[]);
 
-void pipe_cmd(char* cmd, struct command_type* cmdline);
+void pipe_cmd(char* cmd);
 
 void execute_command();
 
