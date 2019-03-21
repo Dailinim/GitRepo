@@ -10,6 +10,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <fcntl.h>//open函数及参数
+#include <signal.h>
+#include <sys/wait.h>
 
 enum info_type {REGULAR, REDIRECT_IN, REDIRECT_OUT, APPEND_OUT};
 struct command_type
@@ -45,9 +47,11 @@ int check(char x);
 
 void parse_cmd(char* cmd, struct command_type* cmdline);
 
-int builtin_cmd(struct command_type cmdline[]);
+int builtin_cmd(struct command_type* cmdline);
 
-void pipe_cmd(char* cmd);
+void pipe_cmd(struct command_type* cmdline);
+
+//void pipe_loop(int* pipe_count, int pipe_num, int* pro_count, int fds[PIPENUM][2], int pointer_num[]);
 
 void execute_command();
 

@@ -23,7 +23,7 @@ void read_command(char cmd[])
 
 void command(char* cmd, struct command_type cmdline[])
 {
-    //按照空格对命令进行分割，保存在argv数组中
+    //按照空格 和 管道符号对命令进行分割，保存在argv数组中
     //默认字符之间单词之间一定有空格
     parse_cmd(cmd, cmdline);
 
@@ -34,7 +34,7 @@ void command(char* cmd, struct command_type cmdline[])
     //先判断是否含有管道，所有含管道的命令都由函数pipe()执行
     if(check('|'))
     {
-        pipe_cmd(cmd);//????是否有必要标记每一种cmd的info
+        pipe_cmd(cmdline);//????是否有必要标记每一种cmd的info
         return;
     }
 
@@ -96,7 +96,7 @@ void parse_cmd(char* cmd, struct command_type* cmdline)
         cmdline->argv[i++] = p;
         p=strtok(NULL,d);
     }
-    cmdline->argv[i]=0;
+    cmdline->argv[i]=NULL;
     cmdline->argc = i;
 
     //判断是否为后台命令
@@ -137,97 +137,121 @@ int builtin_cmd(struct command_type cmdline[])
 }
 
 //专门处理管道
-void pipe_cmd(char* cmd)
+void pipe_cmd(struct command_type *cmdline)
 {
-    /*
+    char ** p_cmd = cmdline->argv;
+    int cmd_pointer[CMDNUM];//记录每一条指令开始的位置
     int pipe_num=0;
-    int fds[PIPENUM][2];
-    char* pipe_cmd[CMDNUM];
-    
+    int cmd_num=0;
+    int fds[PIPENUM+1][2];
+
     //计算需要多少管道
-    for(int i=0; i<cmdline->argc; i++)
+    int i=0;
+    cmd_pointer[i++] = 0;
+    for(int j=0; j<cmdline->argc; j++)
     {
-        if(cmdline->argv[i] == '|')
+        if(strcmp(cmdline->argv[j],"|")==0)
         {
             pipe_num++;
-            cmdline->argv[i] == 0;
-        }       
-    } 
-
-    //创建管道
-    for(int i=0; i<pipe_num; i++)
-        pipe(&fds[i][0]);
-
-    //按照|将原始命令分割开， pipe_argv[]的一项为一个命令
-    int i=0;
-    char* p= strtok(cmd, "|");
-    while(p)
-    {
-        pipe_cmd[i++] = p;
-        p = strtok(NULL, "|");
+            cmd_pointer[i++] = j+1;
+        }
     }
-    pipe_cmd[i]=0;
+    cmd_num = pipe_num+1; 
+    printf("\n pipe_num = %d\n", pipe_num);
 
-    //执行命令
-    pid_t pid;
-    int pipe_count = 0;//管道计数
-    int pro_count = 0;//进程计数
-    if((pid = fork())<0)
-        perror("fork error!");
-    if(pid==0)//子进程
+    //建立管道,从1开始
+    for(i=1; i<=pipe_num; i++)
+        pipe(&fds[i][0]);
+    
+    int cmd_count=0;//子进程从0开始计数， 共n个
+    int pipe_count=1;//管道从1开始计数，共n-1个
+    while(cmd_count < cmd_num)
     {
-        close(STD_OUTPUT);
-        dup2(fds[pipe_count][1], STD_OUTPUT);
-        
-        //按照空格分割命令
-
-    }*/
-}
-
-        
-/*
-void pipe_loop(int pipe_count, int pro_count, char* pipe_cmd[])
-{
-    while(pro_count>1)
-    {
-        pipe_count--;
-        pro_count--;
+        pid_t pid;
         if((pid = fork())<0)
-            perror("pipe error!");
-        
-        if(pid != 0)
-        {   
-            waitpid(pid, NULL, 0);
-            close(STD_OUTPUT);
-            dup2(fds[pipe_count+1][1], STD_OUTPUT);
-            close(STD_INPUT);
-            dup2(fds[pipe_count][0], STD_INPUT);
-
-            //按照空格分割命令
-            char pipe_argv[CMDNUM];
-            int j=0;
-            p = strtok(pipe_cmd[pro_count], " ");
-            while(p)
+            perror("Fork error in pipe!");
+        if(pid != 0)//父进程
+        {
+            
+            
+            int tmpfds[pipe_num+1][2];
+            for(int i=1; i<=pipe_num; i++)
             {
-                pipe_argv[j++]=p;
-                p = strtok(NULL, " ");
+                dup2(fds[i][0], tmpfds[i][0]);
+                dup2(fds[i][1], tmpfds[i][1]);
+                close(fds[i][0]);
+                close(fds[i][1]);
             }
-            pipe_argv[j]=0;
+            printf("\n [%d]: parents started waiting!\n", cmd_count);
+            waitpid(pid, NULL, 0);
 
-            if(execvp(argv[0], argv)<0)
-                perror("execvp error!");
+            for(int i=1; i<=pipe_num; i++)
+            {
+                dup2(tmpfds[i][0], fds[i][0]);
+                dup2(tmpfds[i][1], fds[i][1]);
+            }
+
+            cmd_count++;
+            pipe_count++;
+            printf("\n [%d]: parents stopped waiting!\n", cmd_count);
         }
         else
         {
-            if(pro_count==1)
-                break;
-             
+            printf("\nHas come in\n");
+            printf("\ncmd_count = %d\n", cmd_count);
+
+            p_cmd = cmdline->argv + cmd_pointer[cmd_count];
+            char* cmd_tmp[CMDSIZE];
+            int t=0;
+
+            if(cmd_count < cmd_num-1)
+            {
+                while(strcmp(p_cmd[t], "|")!=0)
+                {
+                    cmd_tmp[t] = p_cmd[t];
+                    printf("\ncmd_tmp[%d]: %s\n", t, cmd_tmp[t]);
+                    t++;
+                }
+                cmd_tmp[t] = NULL;
+            }
+            if(cmd_count == cmd_num-1)
+            {
+                while(p_cmd[t]!=NULL)
+                {
+                    cmd_tmp[t] = p_cmd[t];
+                    printf("\ncmd_tmp[%d]: %s\n", t, cmd_tmp[t]);
+                    t++;
+                }
+                cmd_tmp[t] = NULL;
+            }
+            
+            if(cmd_count<cmd_num-1)
+                printf("begin to close std_output\n");
+            if(cmd_count>0)
+                printf("begin to close std_input\n");
+
+            if(cmd_count < cmd_num-1)
+            {
+                close(STD_OUTPUT);
+                dup2(fds[pipe_count][1], STD_OUTPUT);
+                close(fds[pipe_count][0]);
+            }
+            if(cmd_count > 0)
+            {
+                close(STD_INPUT);
+                dup2(fds[pipe_count-1][0], STD_INPUT);
+                close(fds[pipe_count-1][1]);
+            }
+
+            execvp(cmd_tmp[0], cmd_tmp);
+
         }
+        //pipe_count++;
         
     }
-    
-}*/
+    return;
 
+}
 
 void execute_command(struct command_type* cmdline)
 {
@@ -269,7 +293,7 @@ void execute_command(struct command_type* cmdline)
                 };break;
                 case REDIRECT_OUT:
                 {
-                    printf("\nstdout has changed\n");
+                    //printf("\nstdout has changed\n");
                     tmp_std = dup(STD_OUTPUT);
                     close(STD_OUTPUT);
                     if(open(cmdline->outfile, O_WRONLY| O_CREAT, 0666)==-1)

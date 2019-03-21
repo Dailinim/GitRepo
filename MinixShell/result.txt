@@ -1,15 +1,16 @@
-total 128
-drwxr-xr-x  14 Blankchul  staff    476  3 14 10:27 .
-drwxr-xr-x   9 Blankchul  staff    306  3 14 10:21 ..
--rw-r--r--@  1 Blankchul  staff   6148  3 14 10:27 .DS_Store
+total 120
+drwxr-xr-x  15 Blankchul  staff    510  3 15 14:06 .
+drwxr-xr-x   9 Blankchul  staff    306  3 15 13:02 ..
+-rw-r--r--@  1 Blankchul  staff   6148  3 15 14:04 .DS_Store
 drwxr-xr-x   5 Blankchul  staff    170  3  9 16:21 .vscode
 drwxr-xr-x   3 Blankchul  staff    102  3  9 16:22 hello.dSYM
--rwxr-xr-x   1 Blankchul  staff  15220  3 14 10:27 main
+drwxr-xr-x   3 Blankchul  staff    102  3 14 14:37 mai.dSYM
+-rwxr-xr-x   1 Blankchul  staff  15432  3 15 14:04 main
 -rw-r--r--   1 Blankchul  staff    690  3 13 11:02 main.c
 drwxr-xr-x   3 Blankchul  staff    102  3 11 23:49 main.dSYM
--rw-r--r--   1 Blankchul  staff   8697  3 14 10:26 mshell.c
--rw-r--r--   1 Blankchul  staff   1238  3 14 10:25 mshell.h
--rw-r--r--   1 Blankchul  staff      0  3 14 10:27 result.txt
--rwxr-xr-x   1 Blankchul  staff   8916  3 12 10:46 test
--rw-r--r--   1 Blankchul  staff   4104  3 14 10:09 test.c
-drwxr-xr-x   3 Blankchul  staff    102  3 13 10:55 well
+-rw-r--r--   1 Blankchul  staff   9115  3 15 14:06 mshell.c
+-rw-r--r--   1 Blankchul  staff   1404  3 15 12:23 mshell.h
+-rw-r--r--   1 Blankchul  staff      0  3 15 14:06 result.txt
+-rwxr-xr-x   1 Blankchul  staff   9000  3 15 14:03 test
+-rw-r--r--   1 Blankchul  staff    745  3 15 14:01 test.c
+drwxr-xr-x   3 Blankchul  staff    102  3 14 16:32 test.dSYM
