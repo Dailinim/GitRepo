@@ -136,16 +136,16 @@ int builtin_cmd(struct command_type cmdline[])
     return 0;
 }
 
-//专门处理管道
 void pipe_cmd(struct command_type *cmdline)
 {
     char ** p_cmd = cmdline->argv;
-    int cmd_pointer[CMDNUM];//记录每一条指令开始的位置
+    int cmd_pointer[CMDNUM+1];//记录每一条指令开始的位置
+    int fds[PIPENUM+1][2];
     int pipe_num=0;
     int cmd_num=0;
-    int fds[PIPENUM+1][2];
 
     //计算需要多少管道
+    //cmd从1开始计数
     int i=0;
     cmd_pointer[i++] = 0;
     for(int j=0; j<cmdline->argc; j++)
@@ -161,49 +161,65 @@ void pipe_cmd(struct command_type *cmdline)
 
     //建立管道,从1开始
     for(i=1; i<=pipe_num; i++)
-        pipe(&fds[i][0]);
+        if(pipe(fds[i])<0)
+            perror("pipe error!");
+
     
     int cmd_count=0;//子进程从0开始计数， 共n个
     int pipe_count=1;//管道从1开始计数，共n-1个
     while(cmd_count < cmd_num)
     {
+        printf("Loop: cmd_count = %d\n", cmd_count);
         pid_t pid;
         if((pid = fork())<0)
             perror("Fork error in pipe!");
         if(pid != 0)//父进程
         {
-            
-            
             int tmpfds[pipe_num+1][2];
             for(int i=1; i<=pipe_num; i++)
             {
-                dup2(fds[i][0], tmpfds[i][0]);
-                dup2(fds[i][1], tmpfds[i][1]);
-                close(fds[i][0]);
-                close(fds[i][1]);
+                if(i!=cmd_count && i!=cmd_count+1)
+                {
+                    //printf("fds[%d][%d] = %d   ", i, 0, fds[i][0]);
+                    dup2(fds[i][0], tmpfds[i][0]);
+                    //printf("tmpfds[%d][%d] = %d   ", i, 0, tmpfds[i][0]);
+                    //printf("fds[%d][%d] = %d   ", i, 1, fds[i][1]);
+                    dup2(fds[i][1], tmpfds[i][1]);
+                    //printf("tmpfds[%d][%d] = %d   ", i, 1, tmpfds[i][1]);
+                    //printf("\n");
+                    close(fds[i][0]);
+                    close(fds[i][1]);
+                }
             }
             printf("\n [%d]: parents started waiting!\n", cmd_count);
+
             waitpid(pid, NULL, 0);
 
             for(int i=1; i<=pipe_num; i++)
             {
-                dup2(tmpfds[i][0], fds[i][0]);
-                dup2(tmpfds[i][1], fds[i][1]);
-            }
+                if(i!=cmd_count && i!=cmd_count+1)
+                {
+                    dup2(tmpfds[i][0], fds[i][0]);
+                    dup2(tmpfds[i][1], fds[i][1]);
+                    close(tmpfds[i][0]);
+                    close(tmpfds[i][1]);
+                }
 
+            }
+            printf("\n [%d]: parents stopped waiting!\n", cmd_count);
             cmd_count++;
             pipe_count++;
-            printf("\n [%d]: parents stopped waiting!\n", cmd_count);
+            
         }
         else
         {
-            printf("\nHas come in\n");
-            printf("\ncmd_count = %d\n", cmd_count);
+            printf("\nHas come in:   ");
+            printf("cmd_count = %d\n", cmd_count);
 
+            //找到该执行的命令，保存在p_cmd中
             p_cmd = cmdline->argv + cmd_pointer[cmd_count];
             char* cmd_tmp[CMDSIZE];
             int t=0;
-
             if(cmd_count < cmd_num-1)
             {
                 while(strcmp(p_cmd[t], "|")!=0)
@@ -225,33 +241,41 @@ void pipe_cmd(struct command_type *cmdline)
                 cmd_tmp[t] = NULL;
             }
             
-            if(cmd_count<cmd_num-1)
-                printf("begin to close std_output\n");
-            if(cmd_count>0)
-                printf("begin to close std_input\n");
 
+            //调整输入输出
+            //执行第一条指令的进程只重定向标准输出，执行最后一条的指令只重定向标准输入
+            //其余指令重定向标准输入和标准输出
             if(cmd_count < cmd_num-1)
             {
-                close(STD_OUTPUT);
-                dup2(fds[pipe_count][1], STD_OUTPUT);
-                close(fds[pipe_count][0]);
+                //close(STD_OUTPUT);
+                dup2(fds[cmd_count+1][1], STD_OUTPUT);
+                close(fds[cmd_count+1][0]);
+                //close(fds[cmd_count+1][1]);
+                //fprintf(stdout, "has closed std_output\n");
             }
             if(cmd_count > 0)
             {
-                close(STD_INPUT);
-                dup2(fds[pipe_count-1][0], STD_INPUT);
-                close(fds[pipe_count-1][1]);
+                //close(STD_INPUT);
+                close(fds[cmd_count][1]);
+                dup2(fds[cmd_count][0], STD_INPUT);
+                //close(fds[cmd_count][0]);
+                //fprintf(stdout, "has closes std_input\n");
             }
 
-            execvp(cmd_tmp[0], cmd_tmp);
+            fprintf(stdout, "begin to execvp!");
+            if(execvp(cmd_tmp[0], cmd_tmp)<0)
+                perror("Execvp error in pipe!");
+
+            exit(0);
 
         }
-        //pipe_count++;
         
     }
     return;
 
 }
+
+
 
 void execute_command(struct command_type* cmdline)
 {
@@ -265,11 +289,13 @@ void execute_command(struct command_type* cmdline)
         if(pid!=0)//父进程
         {
             if(cmdline->background==1)//若为后台进程
-                signal(SIGCHLD, SIG_IGN);
+            {
+                printf("This is a background process!\n");
+            }
             else
-                signal(SIGCHLD, SIG_DFL);
-
-            waitpid(pid, NULL, 0);
+            {
+                waitpid(pid, NULL, 0);
+            }
         }
         else//子进程
         {
